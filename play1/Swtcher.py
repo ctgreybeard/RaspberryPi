@@ -33,9 +33,7 @@ GPIO.setup(SWITCHPORT, GPIO.IN, pull_up_down=GPIO.PUD_UP)	# Input with pullup en
 
 def switchpushed():
 	if DEBUG: print("switchpushed called")
-	lednow = GPIO.input(LEDPORT)	# Can we read an output?
-	newled = not lednow
-	GPIO.output(LEDPORT, newled)
+	GPIO.output(LEDPORT, not GPIO.input(LEDPORT))
 	if DEBUG: print("LED toggled")
 
 GPIO.add_event_detect(SWITCHPORT, GPIO.FALLING, callback=switchpushed)	# Detect switch pushes
