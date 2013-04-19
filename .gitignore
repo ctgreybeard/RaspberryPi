@@ -1,0 +1,6 @@
+# vim swp file
+*.swp
+
+# Perltidy LOG and bak files
+*.LOG
+*.bak
