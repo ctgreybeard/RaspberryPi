@@ -13,7 +13,7 @@ import RPi.GPIO as GPIO
 
 LEDPORT = 24
 SWITCHPORT = 25
-DEBUG = False		# Set True for messages
+DEBUG = True		# Set True for messages
 
 # Setup general
 
@@ -31,8 +31,8 @@ GPIO.setup(SWITCHPORT, GPIO.IN, pull_up_down=GPIO.PUD_UP)	# Input with pullup en
 
 # Define the main switch function
 
-def switchpushed():
-	if DEBUG: print("switchpushed called")
+def switchpushed(arg):
+	if DEBUG: print("switchpushed called with:" + str(arg))
 	GPIO.output(LEDPORT, not GPIO.input(LEDPORT))
 	if DEBUG: print("LED toggled")
 
