@@ -17,7 +17,7 @@ use constant {
 
 sub dir_name($) {
     my $dir     = shift @_;
-    my $dirname = 'undef';
+    my $dirname = 'Switch';
     $dirname = $dir == NORMAL ? 'NORMAL' : 'DIVERT' if ( defined $dir );
   return $dirname;
 }
