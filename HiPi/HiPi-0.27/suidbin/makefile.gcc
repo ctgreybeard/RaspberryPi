@@ -1,0 +1,35 @@
+
+MV=mv -f
+RM=rm -f
+
+LD=cc
+CC=cc
+
+PERL=/usr/bin/perl
+
+CFLAGS=-O2 -g -D_REENTRANT -D_GNU_SOURCE -DDEBIAN -fstack-protector -fno-strict-aliasing -pipe -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -fPIC -I/usr/lib/perl/5.14/CORE
+LDFLAGS=-O2 -g  -fstack-protector -L/usr/local/lib
+LDLIBS=-ldl -lm -lpthread -lc -lcrypt -lz -lperl
+
+NOOP=$(PERL) -e1
+
+OBJECTS=main.o hipi-i2c.o
+
+all:: clean exec
+
+hipi-i2c.o:
+	$(CC) -c $(CFLAGS) hipi-i2c.c -o hipi-i2c.o
+
+main.o:
+	$(CC) -c $(CFLAGS) main.c -o main.o
+    
+clean:
+	-$(RM) $(OBJECTS)
+
+realclean: clean
+	-$(RM) hipi-i2c
+
+exec: $(OBJECTS)
+	-$(LD) $(LDFLAGS) $(OBJECTS) $(LDLIBS) -o hipi-i2c
+	strip hipi-i2c
+

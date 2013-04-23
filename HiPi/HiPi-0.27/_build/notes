@@ -1,0 +1,5 @@
+do{ my $x = {
+       'dowx' => 1,
+       'doupdate' => 1
+     };
+$x; }
