@@ -36,6 +36,9 @@ sub name_mode($) {
   return $name;
 } ## end sub name_mode($)
 
+say "Using HiPi::Device::GPIO::VERSION: ", $HiPi::Device::GPIO::VERSION;
+say "Using HiPi::Device::GPIO::Pin::VERSION: ", $HiPi::Device::GPIO::Pin::VERSION;
+
 $dev = HiPi::Device::GPIO->new() or croak "Cannot create device";
 
 $my_pin = RPI_PAD1_PIN_18;
