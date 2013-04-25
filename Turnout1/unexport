@@ -1,0 +1,7 @@
+#!/bin/zsh -f
+
+for p in 23, 24, 25; do
+	if [[ -d /sys/class/gpio/gpio$p ]] {
+		echo "$p" >/sys/class/gpio/unexport
+	}
+done
