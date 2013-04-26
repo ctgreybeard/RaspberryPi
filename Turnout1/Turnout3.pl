@@ -9,29 +9,29 @@ use v5.14;
 
 use HiPi::Device::GPIO;
 use HiPi::Constant qw/ :raspberry /;
-say "Using HiPi version=", $HiPi::Device::GPIO::VERSION;
+say "Using HiPi version=",          $HiPi::Device::GPIO::VERSION;
 say "Using HiPi GPIO Pin version=", $HiPi::Device::GPIO::Pin::VERSION;
 
 use Time::HiRes qw/ sleep /;
 use Carp;
 
 use constant {
-	DEBUGLVL   => 1,
+    DEBUGLVL   => 1,
     NORMAL     => RPI_HIGH,
     DIVERT     => RPI_LOW,
     THROW_PIN  => RPI_PAD1_PIN_18,
     PULSE_PIN  => RPI_PAD1_PIN_16,
-    PULSE_ON   => RPI_LOW,          # Inverter
-    PULSE_OFF  => RPI_HIGH,           # Inverter
-    PULSE_TIME => 100.0,               # 100ms pulse
+    PULSE_ON   => RPI_LOW,           # Inverter
+    PULSE_OFF  => RPI_HIGH,          # Inverter
+    PULSE_TIME => 100.0,             # 100ms pulse
     BUTTON_PIN => RPI_PAD1_PIN_22,
     MS         => .001,
 };
 
 sub DEBUG($;@) {
-	my $msglvl = shift;
-	my $fmt = shift;
-	printf STDERR $fmt . "\n", @_ if ( $msglvl <= DEBUGLVL );
+    my $msglvl = shift;
+    my $fmt    = shift;
+    printf STDERR $fmt . "\n", @_ if ( $msglvl <= DEBUGLVL );
 }
 
 my $gpio = HiPi::Device::GPIO->new();    # OO device
@@ -57,15 +57,15 @@ sub do_pulse($) {
     sleep( 1.0 * MS );    # 1 Millisecond
     croak "Pulse pin not set!" unless $ppin;
     $ppin->value( PULSE_ON );
-	DEBUG 2, "sleeping: %d", PULSE_TIME * MS;
-    DEBUG 2, "slept: %d", sleep( PULSE_TIME * MS );    # Milliseconds
+    DEBUG 2, "sleeping: %d", PULSE_TIME * MS;
+    DEBUG 2, "slept: %d",    sleep( PULSE_TIME * MS );    # Milliseconds
     $ppin->value( PULSE_OFF );
 } ## end sub do_pulse($)
 
 sub do_throw($;$) {
 
     my $pin = shift @_ or croak "do_throw invalid pin";
-    my $dir = shift @_;    # Throw direction
+    my $dir = shift @_;                                   # Throw direction
 
     DEBUG 2, "do_throw: pin: %d, dir: %s", $pin->pinid, dir_name( $dir );
 
@@ -92,15 +92,15 @@ sub set_button($) {    # Prepare the button for input
 sub get_button($) {    # Get FED status, return TRUE if detected
     my $btn_pin = shift @_;
   return ( $btn_pin->value() == RPI_LOW );
-} ## end sub get_button($)
+}
 
 sub kill_it() {
-	$pulse_pin->value( PULSE_OFF );
-	$throw_pin->value( NORMAL );
-	$gpio->unexport_pin( THROW_PIN );
-	$gpio->unexport_pin( PULSE_PIN );
-	$gpio->unexport_pin( BUTTON_PIN );
-}
+    $pulse_pin->value( PULSE_OFF );
+    $throw_pin->value( NORMAL );
+    $gpio->unexport_pin( THROW_PIN );
+    $gpio->unexport_pin( PULSE_PIN );
+    $gpio->unexport_pin( BUTTON_PIN );
+} ## end sub kill_it
 
 sub init() {
     DEBUG 1, "Using Throw pin: %d, Pulse pin: %d, Button pin: %d",
@@ -110,11 +110,13 @@ sub init() {
     $gpio->export_pin( THROW_PIN );
     $throw_pin = $gpio->get_pin( THROW_PIN )
       or croak "Unable to capture THROW_PIN: &THROW_PIN";
-#    $throw_pin->active_low( 1 );
+
+    #    $throw_pin->active_low( 1 );
     $gpio->export_pin( PULSE_PIN );
     $pulse_pin = $gpio->get_pin( PULSE_PIN )
       or croak "Unable to capture PULSE_PIN: &PULSE_PIN";
-#    $pulse_pin->active_low( 1 );
+
+    #    $pulse_pin->active_low( 1 );
     $gpio->export_pin( BUTTON_PIN );
     $button_pin = $gpio->get_pin( BUTTON_PIN )
       or croak "Unable to capture BUTTON_PIN: &BUTTON_PIN";
@@ -137,22 +139,21 @@ sub init() {
 
 init();    # Get started ...
 
- {
-	 my $stopit = 1;
+{
+    my $stopit = 1;
 
-	 local $SIG{'INT'} = sub { $stopit = 0; };
+    local $SIG{ 'INT' } = sub { $stopit = 0; };
 
-	
-while ( $stopit ) {
-    sleep( 10.0 * MS );    # Rapid polling - 10ms
-	DEBUG 9, "P";
-    if ( get_button( $button_pin ) ) {
-        my $newdir = do_throw( $throw_pin );
-        DEBUG 1, "Set %d to %s", THROW_PIN, dir_name( $newdir );
-    }
-} ## end while ( 1 )
- }
+    while ( $stopit ) {
+        sleep( 10.0 * MS );    # Rapid polling - 10ms
+        DEBUG 9, "P";
+        if ( get_button( $button_pin ) ) {
+            my $newdir = do_throw( $throw_pin );
+            DEBUG 1, "Set %d to %s", THROW_PIN, dir_name( $newdir );
+        }
+    } ## end while ( $stopit )
+}
 
- kill_it();
+kill_it();
 
 DEBUG 1, "Done..."
