@@ -6,10 +6,12 @@ use strict;
 use 5.14.0;
 use Carp;
 
+use Getopt::Long;
+
 use HiPi::Device::GPIO qw/ :pinstatus /;
 use HiPi::Constant qw/:raspberry /;
 
-my ( $dev, $pin, $status, $my_pin, $pin_mode );
+my ( $dev, $pin, $status, $my_pin,, $delay, $pin_mode );
 
 sub name_status($) {
     my $status = shift;
@@ -37,16 +39,25 @@ sub name_mode($) {
 } ## end sub name_mode($)
 
 say "Using HiPi::Device::GPIO::VERSION: ", $HiPi::Device::GPIO::VERSION;
-say "Using HiPi::Device::GPIO::Pin::VERSION: ", $HiPi::Device::GPIO::Pin::VERSION;
+say "Using HiPi::Device::GPIO::Pin::VERSION: ",
+  $HiPi::Device::GPIO::Pin::VERSION;
 
 $dev = HiPi::Device::GPIO->new() or croak "Cannot create device";
 
 $my_pin = RPI_PAD1_PIN_18;
+$delay  = 2.0;
+
+GetOptions(
+    'pin=i'   => \$my_pin,
+    'delay=f' => \$delay,
+) && ( 0 == scalar @ARGV ) or croak "Invalid options";
 
 say "Using GPIO pin: ", $my_pin;
 $status = $dev->pin_status( $my_pin );
 
 say "Current status is: ", name_status( $status );
+
+say "Delay time=", $delay;
 
 say "Exporting...";
 $dev->export_pin( $my_pin );
@@ -70,15 +81,18 @@ say "Current mode is: ", name_mode( $pin_mode );
 say "Current active_low is: ", $pin->active_low();
 say "Setting active_low: off";
 $pin->active_low( 0 );
+my $continue = 1;
 
-for ( 1 .. 4 ) {
+local $SIG{ 'INT' } = sub { $continue = 0; };
+
+while ( $continue ) {
     say "Reading value...";
     my $pin_val = $pin->value();
     my $new_val = $pin_val == RPI_HIGH ? RPI_LOW : RPI_HIGH;
     say "Current value=", $pin_val, ", setting to ", $new_val;
     $pin->value( $new_val );
-    sleep( 2 );
-} ## end for ( 1 .. 4 )
+    sleep( $delay );
+} ## end while ( $continue )
 
 say "Unexporting";
 $dev->unexport_pin( $my_pin );
