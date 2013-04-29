@@ -20,10 +20,6 @@ use constant {
     NORMAL     => RPI_LOW,
     DIVERT     => RPI_HIGH,
     THROW_PIN  => RPI_PAD1_PIN_18,
-    PULSE_PIN  => RPI_PAD1_PIN_16,
-    PULSE_ON   => RPI_HIGH,
-    PULSE_OFF  => RPI_LOW,
-    PULSE_TIME => 40.0,              # 40ms pulse
     BUTTON_PIN => RPI_PAD1_PIN_22,
     MS         => .001,
 };
@@ -35,7 +31,7 @@ sub DEBUG($;@) {
 }
 
 my $gpio = HiPi::Device::GPIO->new();    # OO device
-my ( $throw_pin, $pulse_pin, $button_pin );    # Pin objects
+my ( $throw_pin, $button_pin );    # Pin objects
 
 sub mode_name($) {
     my $mode     = shift @_;
@@ -51,16 +47,6 @@ sub dir_name($) {
     $dirname = $dir == NORMAL ? 'NORMAL' : 'DIVERT' if ( defined $dir );
   return $dirname;
 } ## end sub dir_name($)
-
-sub do_pulse($) {
-    my $ppin = shift @_;
-    sleep( 1.0 * MS );    # 1 Millisecond
-    croak "Pulse pin not set!" unless $ppin;
-    $ppin->value( PULSE_ON );
-    DEBUG 2, "sleeping: %.3fms", PULSE_TIME;
-    DEBUG 2, "slept: %.3fms",    sleep( PULSE_TIME * MS ) / MS;   # Milliseconds
-    $ppin->value( PULSE_OFF );
-} ## end sub do_pulse($)
 
 sub do_throw($;$) {
 
@@ -78,7 +64,6 @@ sub do_throw($;$) {
     } ## end unless ( defined $dir )
 
     $pin->value( $dir );
-    do_pulse( $pulse_pin );
   return $dir;
 } ## end sub do_throw($;$)
 
@@ -95,16 +80,14 @@ sub get_button($) {    # Get FED status, return TRUE if detected
 }
 
 sub kill_it() {
-    $pulse_pin->value( PULSE_OFF );
     $throw_pin->value( NORMAL );
     $gpio->unexport_pin( THROW_PIN );
-    $gpio->unexport_pin( PULSE_PIN );
     $gpio->unexport_pin( BUTTON_PIN );
 } ## end sub kill_it
 
 sub init() {
-    DEBUG 1, "Using Throw pin: %d, Pulse pin: %d, Button pin: %d",
-      THROW_PIN, PULSE_PIN, BUTTON_PIN;
+    DEBUG 1, "Using Throw pin: %d, Button pin: %d",
+      THROW_PIN, BUTTON_PIN;
 
     # Export the pins
     $gpio->export_pin( THROW_PIN );
@@ -112,23 +95,14 @@ sub init() {
       or croak "Unable to capture THROW_PIN: &THROW_PIN";
 
     $throw_pin->active_low( 1 );
-    $gpio->export_pin( PULSE_PIN );
-    $pulse_pin = $gpio->get_pin( PULSE_PIN )
-      or croak "Unable to capture PULSE_PIN: &PULSE_PIN";
 
-    $pulse_pin->active_low( 1 );
     $gpio->export_pin( BUTTON_PIN );
     $button_pin = $gpio->get_pin( BUTTON_PIN )
       or croak "Unable to capture BUTTON_PIN: &BUTTON_PIN";
 
-    # Set THROW and PULSE pins to be output
+    # Set THROW pin to be output
     DEBUG 1, "Throw pin old mode=%s",
       mode_name( $throw_pin->mode( RPI_PINMODE_OUTP ) );
-    DEBUG 1, "Pulse pin old mode=%s",
-      mode_name( $pulse_pin->mode( RPI_PINMODE_OUTP ) );
-
-    # Turn off the pulse right away
-    DEBUG 1, "Pulse pin set off, was %d", $pulse_pin->value( PULSE_OFF );
 
     # Set to normal
     do_throw( $throw_pin, NORMAL );
